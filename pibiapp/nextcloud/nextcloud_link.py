@@ -36,7 +36,10 @@ class nextcloud_link():
 			return
 		self.initialpath = docns.initial_path
 		self.sharepublic = docns.share_public
+		self.enabletagging = docns.enable_tagging
+		self.relationaltagging = docns.relational_tagging
 		self.url = docns.script_url
+		self.lasttag = 0
 		nem = frappe.get_all("Nextcloud Excluded Module", filters={ "parent": "Nextcloud Settings" }, fields=["excluded_module"], distinct=True)
 		self.excludedmodules = [row.get("excluded_module") for row in nem]
 		host = self.url + docns.webdav_path 
@@ -50,6 +53,64 @@ class nextcloud_link():
 		decoded = json.loads(data_string)
 		if str(decoded["ocs"]["meta"]["status"]) == 'ok':
 			self.isconnect = True
+			
+	def tagging(self, doc, idfile, relational):
+		self.actualizetags()
+		doctype = doc.attached_to_doctype
+		module = get_doctype_module(doctype)
+		name = doc.attached_to_name 
+		self.puttag( doctype, idfile)
+		self.puttag( module, idfile)
+		self.puttag( name, idfile)
+		if relational: self.relationaltags(doctype, name, idfile)
+	
+	def puttag(self, display_name, idfile):
+		idtag = self.searchtag( display_name)
+		if idtag == "0" or idtag == None:
+			vstatus = self.webdav.addtag( display_name)
+			self.actualizetags(search_name=display_name)
+			idtag = self.searchtag( display_name)
+			if idtag == "0" or idtag == None: return
+		self.webdav.assingtag(idfile, idtag)
+
+	def searchtag(self, display_name):
+		idtag = frappe.get_value("Nextcloud Tags",{"display_name":display_name},"id_tag")
+		if not idtag: idtag = "0"
+		return idtag
+		
+	def actualizetags(self, spaces=1, search_name=""):
+		docns = frappe.get_doc("Nextcloud Settings")
+		if docns.last_id_tag is None or search_name != "": spaces = 50
+		j = v = int(0)
+		i = lastid = int(0 if docns.last_id_tag is None else docns.last_id_tag)
+		while True:
+			i += 1
+			display_name = self.webdav.gettag(str(i))
+			if display_name != "":
+				lastid = i
+				self.inserttag( i, display_name)	
+				j += 1
+				if display_name == search_name: break
+				else: v = 0
+			else:
+				v += 1
+				if (v >= spaces): break
+			if (v > spaces ): break
+		docns.last_id_tag = lastid
+		docns.save()
+
+	def inserttag(self, idtag, display_name):
+		doctag = frappe.new_doc("Nextcloud Tags")
+		doctag.update( {"id_tag" : idtag, "display_name" : display_name })
+		doctag.insert()
+	
+	def relationaltags(self, doctype, name, idfile):
+		docntrans = frappe.get_doc(doctype, name)
+		meta = frappe.get_meta(doctype)
+		for lf in meta.get_link_fields():
+			name = docntrans.get(lf.fieldname)
+			if name != "" and name != None:
+				self.puttag( name, idfile)		
 
 @frappe.whitelist()
 def nextcloud_insert(doc, method=None):
@@ -101,6 +162,9 @@ def nextcloud_insert(doc, method=None):
 		doc.save()
     # delete local file		
 	os.remove(local_fileobj)
+	# tagging
+	if nc.enabletagging: nc.tagging(doc, fileid, relational=nc.relationaltagging)
+	
 
 @frappe.whitelist()
 def nextcloud_delete(doc, method=None):

@@ -18,6 +18,9 @@
 
 import requests
 from numbers import Number
+import json
+import os
+import xml.etree.ElementTree as ET
 
 class WebdavException(Exception):
 	pass
@@ -120,7 +123,39 @@ class WebDav(object):
 				self.command('PUT', remote_fileobj, (200, 201, 204), data=fileobj)
 		else:
 			self.command('PUT', remote_fileobj, (200, 201, 204), data=local_fileobj)
-
+			
+    def addtag(self, display_name):
+        url = self.baseurl.replace("webdav","dav") + "/systemtags"
+        x = {"name": display_name, "userVisible": "true", "userAssignable": "true"}
+        data = json.dumps(x)
+        headers = {"Content-Type": "application/json" }
+        response = self.session.post(url, data=data, headers=headers)
+        return response.status_code
+        
+    def assingtag(self, idfile, idtag):
+        url = self.baseurl.replace("webdav","dav") + "/systemtags-relations/files/" + str(idfile) + "/" + str(idtag)
+        headers = {"Content-Type": "text/xml" }
+        response = self.session.put(url, headers=headers)
+        return response.status_code
+ 
+    def gettag(self, idtag):
+        method='PROPFIND'
+        url = self.baseurl.replace("webdav","dav") + "/systemtags/" + str(idtag)
+        headers = {"Content-Type": "text/xml" }
+        fullpath = os.path.realpath(__file__).replace("nextcloud_apis.py","tagpropfind.xml")
+        fullpath = fullpath.replace('xmlc','xml')
+        xmlfile = open(fullpath,"r") 
+        data = xmlfile.read()
+        xmlfile.close()
+        response = self.session.request(method, url, headers=headers, data=data, allow_redirects=False)
+        if response.status_code >= 400: return ''
+        root = ET.fromstring(response.content)
+        # when "userVisible": "true", "userAssignable": "true"
+        if root[0][1][0][1].text == 'true' and root[0][1][0][2].text == 'true':
+			return root[0][1][0][0].text
+        else:
+			return ''
+ 
 class OCS():
     def __init__(self, ncurl, user, passwd, js=False):
 		self.tojs = "?format=json" if js else ""
