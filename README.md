@@ -12,6 +12,8 @@ Pibiapp is an application developed on the Frappe framework to integrate it with
     Create folders to archive by application and module.
     
     Share the link with Nextcloud users that belong to the group corresponding to the module
+    
+    Tag in Nextcloud the attached files taking into account the application, the modules, the identifier of the transaction and other related data
 
 ### License
 
@@ -29,3 +31,5 @@ bench --site yoursite install-app pibiapp
 ```
 
 Login to your site to configure the app.
+
+https://github.com/doloresjuliana/pibiapp/wiki/NEXTCLOUD-SETTINGS
