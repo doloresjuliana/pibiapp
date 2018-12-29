@@ -121,7 +121,8 @@ def nextcloud_insert(doc, method=None):
 	# Excluded module
 	if module in nc.excludedmodules: return
 	site = frappe.local.site
-	local_fileobj = "./" + site + doc.file_url
+	if doc.is_private: local_fileobj = "./" + site + doc.file_url
+	else: local_fileobj = "./" + site + "/public" + doc.file_url
 	fileobj = local_fileobj.split('/')
 	uu = len(fileobj) - 1
 	# get path
@@ -142,7 +143,7 @@ def nextcloud_insert(doc, method=None):
 	permit = 1
 	data_json  = nc.ocs.createShare(pathglobal,shareType,shareWith=module,publicUpload=True,password=None,permissions=permit)
 	# add public Share in Nextcloud
-	if nc.sharepublic:
+	if nc.sharepublic or doc.is_private == False:
 		shareType = 3
 		data_json  = nc.ocs.createShare(pathglobal,shareType)
 		if data_json == "":
@@ -151,7 +152,7 @@ def nextcloud_insert(doc, method=None):
 	data_string = json.dumps(data_json)
 	decoded = json.loads(data_string)
 	fileid = str(decoded["ocs"]["data"]["file_source"]) 
-	if nc.sharepublic:
+	if nc.sharepublic or doc.is_private == False:
 		urllink = str(decoded["ocs"]["data"]["url"]) 
 	else:
 		urllink = nc.url + "/f/" + fileid
