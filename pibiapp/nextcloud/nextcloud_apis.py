@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Dolores Juliana Fdez Martin
+# Copyright (c) 2018-2019, Dolores Juliana Fdez Martin
 # License: GNU General Public License v3. See license.txt
 #
 # This file is part of Pibiapp_Nextcloud.
@@ -110,7 +110,7 @@ class WebDav(object):
             self.cd(old_cwd)
 
     def delete(self, path):
-        self.command('DELETE', path, 204)
+        self.command('DELETE', path, (204, 404))
 
     def upload(self, local_fileobj, remote_fileobj, nc_path="."	):
 		if nc_path != ".": 
@@ -155,7 +155,36 @@ class WebDav(object):
 			return root[0][1][0][0].text
         else:
 			return ''
- 
+
+    def deletetags(self, idfile, nodelete):
+		method='PROPFIND'
+		url = self.baseurl.replace("webdav","dav") + "/systemtags-relations/files/" + str(idfile)
+		headers = {"Content-Type": "text/xml" }
+		fullpath = os.path.realpath(__file__).replace("nextcloud_apis.py","tagpropfind.xml")
+		fullpath = fullpath.replace('xmlc','xml')
+		xmlfile = open(fullpath,"r")
+		data = xmlfile.read()
+		xmlfile.close()
+		response = self.session.request(method, url, headers=headers, data=data, allow_redirects=False)
+		if response.status_code >= 400: return ''
+		root = ET.fromstring(response.content)
+		i = 1
+		while i < len(root):
+			tag = root[i][1][0][0].text
+			if not tag in nodelete:
+				idtag = root[i][1][0][3].text
+				status_code = self.deletetag(idfile, idtag)
+				if status_code >= 400: break
+			i += 1
+		return
+
+    def deletetag(self, idfile, idtag):
+		method='DELETE'
+		url = self.baseurl.replace("webdav","dav") + "/systemtags-relations/files/" + str(idfile) + "/" + str(idtag)
+		headers = {"Content-Type": "text/xml" }
+		response = self.session.request(method, url, headers=headers)
+		return response.status_code
+
 class OCS():
     def __init__(self, ncurl, user, passwd, js=False):
 		self.tojs = "?format=json" if js else ""
@@ -213,7 +242,7 @@ class OCS():
         return self.post(url,msg)
 
     def createShare(self,path,shareType,shareWith=None,publicUpload=None,password=None,permissions=None):
-        url = self.Share_url + "/shares"+self.tojs
+        url = self.Share_url + "/shares" + self.tojs
         if publicUpload == True: publicUpload = "true"
         if (path == None or isinstance(shareType, int) != True) or (shareType in [0,1] and shareWith == None): return False
         msg = {"path":path,"shareType":shareType}

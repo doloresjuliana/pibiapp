@@ -1,4 +1,4 @@
-# Copyright (c) 2018, Dolores Juliana Fdez Martin
+# Copyright (c) 2018-2019, Dolores Juliana Fdez Martin
 # License: GNU General Public License v3. See license.txt
 #
 # This file is part of Pibiapp_Nextcloud.
@@ -23,10 +23,12 @@ from frappe.utils import get_request_site_address
 import requests
 from json import dumps
 from frappe.modules.utils import get_doctype_module, get_module_app
+from frappe.desk.tags import DocTags
 from pibiapp.nextcloud import nextcloud_apis
 import json
 import os
 import time
+import sys
 
 class nextcloud_link():
 	def __init__(self):
@@ -56,13 +58,9 @@ class nextcloud_link():
 			
 	def tagging(self, doc, idfile, relational):
 		self.actualizetags()
-		doctype = doc.attached_to_doctype
-		module = get_doctype_module(doctype)
-		name = doc.attached_to_name 
-		self.puttag( doctype, idfile)
-		self.puttag( module, idfile)
-		self.puttag( name, idfile)
-		if relational: self.relationaltags(doctype, name, idfile)
+		lista = self.listtags(doc, idfile, relational)
+		for display_name in lista:
+			self.puttag( display_name, idfile)
 	
 	def puttag(self, display_name, idfile):
 		idtag = self.searchtag( display_name)
@@ -107,68 +105,150 @@ class nextcloud_link():
 	def relationaltags(self, doctype, name, idfile):
 		docntrans = frappe.get_doc(doctype, name)
 		meta = frappe.get_meta(doctype)
+		lista = ""
 		for lf in meta.get_link_fields():
-			name = docntrans.get(lf.fieldname)
-			if name != "" and name != None:
-				self.puttag( name, idfile)		
+			tag = docntrans.get(lf.fieldname)
+			if tag != "" and tag != None:
+				lista = lista + " # " + tag
+		lista = lista + DocTags(doctype).get_tags(name).replace("," , " # ")
+		return lista
+				
+	def deletetags(self, doc, idfile, relational=True):
+		lista = self.listtags(doc, idfile, relational)
+		status_code = self.webdav.deletetags(idfile, nodelete=lista)
+		
+	def listtags(self, doc, idfile, relational):
+		doctype = doc.attached_to_doctype
+		module = get_doctype_module(doctype)
+		name = doc.attached_to_name 
+		lista = doctype + " # " + module + " # " + name
+		if relational: lista = lista + self.relationaltags(doctype, name, idfile)
+		return lista.split(" # ")
+					
+	def shareModule(self, doc):
+		# add group for module 
+		data_json = doc.nc.ocs.getGroup(doc.nc.module)
+		data_string = json.dumps(data_json)
+		decoded = json.loads(data_string)
+		isgroup = str(decoded["ocs"]["meta"]["statuscode"])
+		if isgroup == '404':
+			data_json = doc.nc.ocs.addGroup(doc.nc.module)
+		# add Share group in Nextcloud
+		shareType = 1
+		permit = 1
+		data_json  = doc.nc.ocs.createShare(doc.nc.pathglobal,shareType,shareWith=doc.nc.module,publicUpload=True,password=None,permissions=permit)
+		return data_json
+		
 
 @frappe.whitelist()
-def nextcloud_insert(doc, method=None):
+def nextcloud_before_insert(doc, method=None):
+	doc.flags.ignore_nc = True
 	nc = nextcloud_link()
 	if not nc.isconnect: return
+	doc.flags.ignore_file_validate = True
 	doctype = doc.attached_to_doctype
 	module = get_doctype_module(doctype)
 	# Excluded module
 	if module in nc.excludedmodules: return
+	# File previously attached to another transaction
+	if not doc.file_name or doc.file_name == None: return
+	if " NC/f/" in doc.file_name: return
+	doc.flags.ignore_nc = False
 	site = frappe.local.site
 	if doc.is_private: local_fileobj = "./" + site + doc.file_url
 	else: local_fileobj = "./" + site + "/public" + doc.file_url
 	fileobj = local_fileobj.split('/')
 	uu = len(fileobj) - 1
-	# get path
-	app = get_module_app(module)
-	path = nc.initialpath + "/" + app + "/" + module + "/" + doctype
-	pathglobal = path + "/" + fileobj[uu]
+	doc.nc = nc
+	doc.nc.module = module
+	doc.nc.app = get_module_app(module)
+	doc.nc.path = nc.initialpath + "/" + doc.nc.app + "/" + module + "/" + doctype
+	doc.nc.pathglobal = doc.nc.path + "/" + fileobj[uu]
+	doc.nc.local_fileobj = local_fileobj
+	doc.nc.remote_fileobj=fileobj[uu]
+	
+
+@frappe.whitelist()
+def nextcloud_insert(doc, method=None):
+	if doc.flags.ignore_nc: return
 	# upload to nextcloud
-	nc.webdav.upload(local_fileobj, remote_fileobj=fileobj[uu], nc_path=path)
-	# add group for module 
-	data_json = nc.ocs.getGroup(module)
-	data_string = json.dumps(data_json)
-	decoded = json.loads(data_string)
-	isgroup = str(decoded["ocs"]["meta"]["statuscode"])
-	if isgroup == '404':
-		data_json = nc.ocs.addGroup(module)
-	# add Share group in Nextcloud	
-	shareType = 1
-	permit = 1
-	data_json  = nc.ocs.createShare(pathglobal,shareType,shareWith=module,publicUpload=True,password=None,permissions=permit)
+	if not "http" in doc.nc.local_fileobj:
+		doc.nc.webdav.upload(local_fileobj=doc.nc.local_fileobj, remote_fileobj=doc.nc.remote_fileobj, nc_path=doc.nc.path)
+	else:
+		data = frappe.db.get_value("File", {"file_url": doc.file_url , "file_name": ["like", "%NC/f/%"]}, ["attached_to_doctype", "name", "file_name"], as_dict=True)
+		if data:
+			if  doc.attached_to_doctype != data.attached_to_doctype:
+				doctype = data.attached_to_doctype
+				module = get_doctype_module(doctype)
+				app = get_module_app(module)
+				doc.nc.pathglobal = doc.nc.initialpath + "/" + app + "/" + module + "/" + doctype + "/" + doc.file_name
+				data_json = doc.nc.shareModule(doc)
+			fname = data.file_name.replace(" NC/f/","#")
+			doc.file_name = fname.split("#")[0] + " NC(" + data.name + ")/f/" + fname.split("#")[1]
+			doc.save()
+		return
+	data_json  = doc.nc.shareModule(doc)
 	# add public Share in Nextcloud
-	if nc.sharepublic or doc.is_private == False:
+	if doc.nc.sharepublic or doc.is_private == False:
 		shareType = 3
-		data_json  = nc.ocs.createShare(pathglobal,shareType)
+		data_json  = doc.nc.ocs.createShare(doc.nc.pathglobal,shareType)
 		if data_json == "":
 			time.sleep(2)
-			data_json  = nc.ocs.createShare(pathglobal,shareType)
+			data_json  = doc.nc.ocs.createShare(doc.nc.pathglobal,shareType)
 	data_string = json.dumps(data_json)
 	decoded = json.loads(data_string)
-	fileid = str(decoded["ocs"]["data"]["file_source"]) 
-	if nc.sharepublic or doc.is_private == False:
+	try:
+		fileid = str(decoded["ocs"]["data"]["file_source"]) 
+	except TypeError:
+		fname = frappe.db.get_value("File", {"file_name": ["like", doc.file_name + " NC/f/%"]}, "name")
+		docorigin = frappe.get_doc('File', str(fname))
+		if docorigin:
+			docorigin.content_hash = doc.content_hash
+			docorigin.flags.ignore_file_validate = True
+			docorigin.save()
+			if doc.nc.enabletagging:
+				fileid = str(docorigin.file_name.replace(" NC/f/","#").split("#")[1])
+				doc.nc.deletetags(docorigin, fileid, relational=doc.nc.relationaltagging)
+				doc.nc.tagging(docorigin, fileid, relational=doc.nc.relationaltagging)
+			os.remove(doc.nc.local_fileobj)
+			doc.delete()
+			frappe.db.commit()
+		sys.exit()
+	if doc.nc.sharepublic or doc.is_private == False:
 		urllink = str(decoded["ocs"]["data"]["url"]) 
 	else:
-		urllink = nc.url + "/f/" + fileid
+		urllink = doc.nc.url + "/f/" + fileid
 	# update doctype file
 	if urllink != None and urllink != "":
 		doc.file_url = urllink
 		doc.file_name = doc.file_name + " NC/f/" + fileid
 		doc.save()
-    # delete local file		
-	os.remove(local_fileobj)
+    	# delete local file		
+	os.remove(doc.nc.local_fileobj)
 	# tagging
-	if nc.enabletagging: nc.tagging(doc, fileid, relational=nc.relationaltagging)
+	if doc.nc.enabletagging: doc.nc.tagging(doc, fileid, relational=doc.nc.relationaltagging)
 	
+@frappe.whitelist()
+def nextcloud_before_delete(doc, method=None):
+	doc.flags.ignore_nc = True
+	nc = nextcloud_link()
+	if not nc.isconnect: return
+	doc.flags.ignore_file_validate = True
+	doctype = doc.attached_to_doctype
+	module = get_doctype_module(doctype)
+	# Excluded module
+	if module in nc.excludedmodules: return
+	# File previously attached to another transaction
+	if not doc.file_name or doc.file_name == None: return
+	if not " NC/f/" in doc.file_name: return
+	doc.flags.ignore_nc = False
+	data = frappe.db.get_value("File", {"file_url": doc.file_url , "file_name": ["like", "%NC(%"]}, ["attached_to_doctype", "attached_to_name"], as_dict=True)
+	if data:
+		frappe.throw(_("The file can not be deleted while it is related to this transaction: {0} {1}").format(data.attached_to_doctype, data.attached_to_name))
 
 @frappe.whitelist()
 def nextcloud_delete(doc, method=None):
+	if doc.flags.ignore_nc: return
 	nc = nextcloud_link()
 	if not nc.isconnect: return
 	doctype = doc.attached_to_doctype
