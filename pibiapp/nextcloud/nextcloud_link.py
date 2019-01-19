@@ -163,9 +163,9 @@ def nextcloud_before_insert(doc, method=None):
 	doc.nc.module = module
 	doc.nc.app = get_module_app(module)
 	doc.nc.path = nc.initialpath + "/" + doc.nc.app + "/" + module + "/" + doctype
-	doc.nc.pathglobal = doc.nc.path + "/" + fileobj[uu]
+	doc.nc.pathglobal = doc.nc.path + "/" + fileobj[uu].encode("ascii", "ignore").decode("ascii")
 	doc.nc.local_fileobj = local_fileobj
-	doc.nc.remote_fileobj=fileobj[uu]
+	doc.nc.remote_fileobj=fileobj[uu].encode("ascii", "ignore").decode("ascii")
 	
 
 @frappe.whitelist()
@@ -221,9 +221,9 @@ def nextcloud_insert(doc, method=None):
 	# update doctype file
 	if urllink != None and urllink != "":
 		doc.file_url = urllink
-		doc.file_name = doc.file_name + " NC/f/" + fileid
+		doc.file_name = doc.file_name.encode("ascii", "ignore").decode("ascii") + " NC/f/" + fileid
 		doc.save()
-    	# delete local file		
+    	# delete local file
 	os.remove(doc.nc.local_fileobj)
 	# tagging
 	if doc.nc.enabletagging: doc.nc.tagging(doc, fileid, relational=doc.nc.relationaltagging)

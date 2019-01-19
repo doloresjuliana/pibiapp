@@ -55,7 +55,8 @@ class WebDav(object):
             self.session.auth = (username, password)
 
     def getUrl(self, path):
-        path = str(path).strip()
+	try: path = str(path).strip()
+	except UnicodeEncodeError: path = path.encode("ascii", "ignore").decode("ascii").strip()
         if path.startswith('/'):
             return self.baseurl + path
         return "".join((self.baseurl, self.cwd, path))
