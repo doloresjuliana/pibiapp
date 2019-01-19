@@ -13,7 +13,9 @@ Pibiapp is an application developed on the Frappe framework to integrate it with
     
     Share the link with Nextcloud users that belong to the group corresponding to the module
     
-    Tag in Nextcloud the attached files taking into account the application, the modules, the identifier of the transaction and other related data
+    Tag in Nextcloud the attached files taking into account the application, the modules, the identifier of the transaction and other related data. Includes tagging of the Frappe transaction as file tags in Nextcloud.
+    
+    Manage a history of versions in Nextcloud. When the same file is uploaded from Frappe with successive modifications.
 
 ### License
 
@@ -21,7 +23,7 @@ GNU General Public License v3. See license.txt
 
 ### Install
 
-You must have previously installed the Frappe framework and bench
+You must have previously installed the Frappe framework v10.1.68+ and bench
 
 Go to your bench folder and setup the new app
 
