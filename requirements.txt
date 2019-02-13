@@ -1,1 +1,1 @@
-frappe/frappe>=10.1.68
+frappe
