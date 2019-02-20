@@ -186,6 +186,13 @@ class WebDav(object):
 		response = self.session.request(method, url, headers=headers)
 		return response.status_code
 
+    def downloadtoserver(self, remote_fileobj, local_fileobj):
+		resp = self.command('GET', remote_fileobj, (200), stream=True)
+		response = open(local_fileobj, 'wb')
+		for chunk in resp.iter_content(100000):
+			response.write(chunk)
+		response.close()
+
 class OCS():
     def __init__(self, ncurl, user, passwd, js=False):
 		self.tojs = "?format=json" if js else ""

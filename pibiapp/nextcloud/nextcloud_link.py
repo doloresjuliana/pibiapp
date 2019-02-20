@@ -19,7 +19,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import get_request_site_address
+from frappe.utils import get_request_site_address, encode
 import requests
 from json import dumps
 from frappe.modules.utils import get_doctype_module, get_module_app
@@ -29,6 +29,7 @@ import json
 import os
 import time
 import sys
+from six import text_type, PY2
 
 class nextcloud_link():
 	def __init__(self):
@@ -269,3 +270,52 @@ def nextcloud_callback(code=None):
 	else:
 		mensaje = 'ERROR. Incorrect access'  
 	frappe.throw(_(mensaje))
+
+def nextcloud_downloadtoserver(doc, method=None):
+	nc = nextcloud_link()
+	if not nc.isconnect: return
+	if " NC/f/" in doc.file_name:
+		doctype = doc.attached_to_doctype
+	elif " NC(" in doc.file_name:
+		doctype = frappe.db.get_value("File", {"file_url": doc.file_url , "file_name": ["like", "%NC/f/%"]}, "attached_to_doctype")
+	else:
+		return
+	module = get_doctype_module(doctype)
+	if module in nc.excludedmodules: return
+	ncf = doc.file_name.find(" NC")
+	if ncf == -1: return
+	filename = doc.file_name[0:ncf]
+	app = get_module_app(module)
+	path = nc.initialpath + "/" + app + "/" + module + "/" + doctype + "/" + filename
+	site = frappe.local.site
+	local_fileobj = "./" + site + "/private/files/" + filename
+	nc.webdav.downloadtoserver(path, local_fileobj)
+	return local_fileobj
+
+@frappe.whitelist()	
+def get_content(docfile):
+	"""Returns [`file_name`, `content`] for given file name `fname`"""
+	if docfile.get('content'):
+		return docfile.content
+	if " NC" in docfile.file_name and "/f/" in docfile.file_name:
+		file_path =  nextcloud_downloadtoserver(docfile)
+		ncf = docfile.file_name.find(" NC")
+		filename = docfile.file_name[0:ncf]
+		docfile.file_name = filename
+	else:
+		file_path = docfile.get_full_path()
+
+	# read the file
+	if PY2:
+		with open(encode(file_path)) as f:
+			content = f.read()
+	else:
+		with io.open(encode(file_path), mode='rb') as f:
+			content = f.read()
+			try:
+				# for plain text files
+				content = content.decode()
+			except UnicodeDecodeError:
+				# for .png, .jpg, etc
+				pass
+	return content

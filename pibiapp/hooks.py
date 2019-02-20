@@ -92,7 +92,8 @@ doc_events = {
   		"before_insert": "pibiapp.nextcloud.nextcloud_link.nextcloud_before_insert",
  		"after_insert": "pibiapp.nextcloud.nextcloud_link.nextcloud_insert",
  		"on_trash": "pibiapp.nextcloud.nextcloud_link.nextcloud_before_delete",
- 		"after_delete": "pibiapp.nextcloud.nextcloud_link.nextcloud_delete"
+ 		"after_delete": "pibiapp.nextcloud.nextcloud_link.nextcloud_delete",
+ 		"get_content": "pibiapp.nextcloud.nextcloud_link.get_content"
 	}
 }
 
