@@ -16,6 +16,8 @@ Pibiapp is an application developed on the Frappe framework to integrate it with
     Tag in Nextcloud the attached files taking into account the application, the modules, the identifier of the transaction and other related data. Includes tagging of the Frappe transaction as file tags in Nextcloud.
     
     Manage a history of versions in Nextcloud. When the same file is uploaded from Frappe with successive modifications.
+    
+    Include archives stored in Nextcloud as attachments to the email
 
 ### License
 
