@@ -94,6 +94,12 @@ doc_events = {
  		"on_trash": "pibiapp.nextcloud.nextcloud_link.nextcloud_before_delete",
  		"after_delete": "pibiapp.nextcloud.nextcloud_link.nextcloud_delete",
  		"get_content": "pibiapp.nextcloud.nextcloud_link.get_content"
+	},
+	"Ext Data Source": {
+		"on_submit": "pibiapp.external_data.data_manage.loaddata"
+	},
+	"Successive loads": {
+		"on_submit": "pibiapp.external_data.data_manage.reloaddata"
 	}
 }
 

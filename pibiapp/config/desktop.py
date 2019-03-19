@@ -11,5 +11,13 @@ def get_data():
 			"type": "module",
 			"label": _("Nextcloud"),
 			"hidden": 1
+		},
+		{
+			"module_name": "External Data",
+			"color": "grey",
+			"icon": "octicon octicon-file-binary",
+			"type": "module",
+			"label": _("External Data"),
+			"hidden": 1
 		}
 	]
