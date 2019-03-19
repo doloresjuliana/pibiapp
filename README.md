@@ -5,7 +5,7 @@ Pibiapp is an application developed on the Frappe framework to integrate it with
 
 #### Current modules
 
-- Nextcloud
+- **Nextcloud**
     
     Connect Frappe and Nextcloud, store the attachments on the Nextcloud server
     
@@ -18,6 +18,21 @@ Pibiapp is an application developed on the Frappe framework to integrate it with
     Manage a history of versions in Nextcloud. When the same file is uploaded from Frappe with successive modifications.
     
     Include archives stored in Nextcloud as attachments to the email
+    
+- **External Data**
+    
+    Automatically create a new DocType with its data structure of a file
+    
+    Allows you to select the Module of a Frappe application in which you will create the DocType
+    
+    Supports files with formats: Excel, CSV, JSON and XML
+    
+    Analyze the data set to determine the type of data that fields are mandatory and lists of selectable values
+    
+    Allows successive data loads, provided that the format of the file and the position of the data match the original file used to create the DocType
+    
+    
+    It is limited to data structures of simple records without tables. This version does not load a JSON or XML with hierarchized data in several levels.    
 
 ### License
 
