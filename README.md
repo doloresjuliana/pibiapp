@@ -19,6 +19,8 @@ Pibiapp is an application developed on the Frappe framework to integrate it with
     
     Include archives stored in Nextcloud as attachments to the email
     
+    Upload database backups and local files
+    
 - **External Data**
     
     Automatically create a new DocType with its data structure of a file
@@ -34,6 +36,14 @@ Pibiapp is an application developed on the Frappe framework to integrate it with
     
     It is limited to data structures of simple records without tables. This version does not load a JSON or XML with hierarchized data in several levels.    
 
+- **Redash**
+
+    Integrate the view of dashboards in Frappe so that end users do not need to access Redash
+    
+    Provides a security layer that allows Frappe to manage user access to control panels according to their roles
+
+    It is not the purpose of this connector to allow the definition of new Redash panels from Frappe. The system administrator or an expert BI technician should define directly in Redash the control panels that will be visible by this connector in this new module.
+    
 ### License
 
 GNU General Public License v3. See license.txt
