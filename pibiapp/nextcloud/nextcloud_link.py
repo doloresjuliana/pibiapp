@@ -39,17 +39,18 @@ class nextcloud_link():
 		docns = frappe.get_doc("Nextcloud Settings")
 		if not docns or not docns.enable:
 			return
-		self.doctype = doc.attached_to_doctype
+		self.doctype = doc.attached_to_doctype  if doc != None else "Nextcloud Settings"
 		self.module = get_doctype_module(self.doctype)
 		nem = frappe.get_all("Nextcloud Excluded Module", filters={ "parent": "Nextcloud Settings", "excluded_module": self.module }, fields=["excluded_module","doctypes","file_formats"], distinct=True)
 		if nem:
 			for row in nem:
-				xdoctypes = row.doctypes
-				xfile_formats = row.file_formats
-			if xdoctypes == "" or "All" in xdoctypes or self.doctype in xdoctypes.split(","):
+				xdoctypes = row.doctypes.upper()
+				xfile_formats = row.file_formats.upper()
+			if xdoctypes == "" or "ALL" in xdoctypes or self.doctype.upper() in xdoctypes.split(","):
+				if doc == None or doc.file_name == None: return
 				a = doc.file_name.split(".")
 				xformat = a[len(a) - 1]
-				if xfile_formats == "" or "All" in xfile_formats or xformat in xfile_formats.split(","):
+				if xfile_formats == "" or "ALL" in xfile_formats or xformat.upper() in xfile_formats.split(","):
 					return
 		self.app = get_module_app(self.module)
 		self.initialpath = docns.initial_path
@@ -324,3 +325,22 @@ def tagging_gb(doc, fileid):
 	nc = nextcloud_link(doc=doc)
 	doc.nc = nc
 	doc.nc.tagging(doc, fileid, relational=doc.nc.relationaltagging)
+@frappe.whitelist()
+def nextcloud_backup(doc, method=None):
+	doc.flags.ignore_nc = True
+	nc = nextcloud_link(doc=doc)
+	if not nc.isconnect: return "Error conection Nextcloud"
+	if not doc.file_name or doc.file_name == None: return "Error name backup file"
+	doc.flags.ignore_nc = False
+	local_fileobj = doc.file_url
+	fileobj = local_fileobj.split('/')
+	uu = len(fileobj) - 1
+	doc.nc = nc
+	doc.nc.module = "Backups"
+	doc.nc.path = nc.initialpath + "/" + nc.app + "/" + doc.nc.module 
+	doc.nc.pathglobal = doc.nc.path + "/" + fileobj[uu].encode("ascii", "ignore").decode("ascii")
+	doc.nc.local_fileobj = local_fileobj
+	doc.nc.remote_fileobj=fileobj[uu].encode("ascii", "ignore").decode("ascii")
+	doc.nc.webdav.upload(local_fileobj=doc.nc.local_fileobj, remote_fileobj=doc.nc.remote_fileobj, nc_path=doc.nc.path)
+	data_json  = doc.nc.shareModule(doc)
+	return "Upload backup"

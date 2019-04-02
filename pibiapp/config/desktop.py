@@ -19,5 +19,13 @@ def get_data():
 			"type": "module",
 			"label": _("External Data"),
 			"hidden": 1
-		}
+		},
+                {
+                        "module_name": "Redash",
+                        "color": "grey",
+                        "icon": "octicon octicon-pulse",
+                        "type": "module",
+                        "label": _("Redash"),
+                        "hidden": 1
+                }
 	]

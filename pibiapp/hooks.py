@@ -98,6 +98,9 @@ doc_events = {
 	"Ext Data Source": {
 		"on_submit": "pibiapp.external_data.data_manage.loaddata"
 	},
+	"Change DocType Empty": {
+		"on_submit": "pibiapp.external_data.data_manage.changedoctype"
+	},
 	"Successive loads": {
 		"on_submit": "pibiapp.external_data.data_manage.reloaddata"
 	}
@@ -123,6 +126,16 @@ doc_events = {
 # 		"pibiapp.tasks.monthly"
 # 	]
 # }
+
+scheduler_events = {
+	"daily_long": [
+		"pibiapp.nextcloud.doctype.nextcloud_settings.nextcloud_settings.take_backups_daily"
+	],
+	"weekly_long": [
+		"pibiapp.nextcloud.doctype.nextcloud_settings.nextcloud_settings.take_backups_weekly"
+	]
+}
+
 
 # Testing
 # -------

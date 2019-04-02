@@ -13,6 +13,11 @@ def get_data():
 				},
 				{
 					"type": "doctype",
+					"name": "Change DocType Empty",
+					"description": _("Change the fields of an external data DocType while it is empty"),
+				},
+				{
+					"type": "doctype",
 					"name": "Successive loads",
 					"description": _("Reload external data"),
 				}
