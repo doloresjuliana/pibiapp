@@ -204,14 +204,14 @@ def analyzedata(row_labels, row_start, ext_rows, row_stop=None, newdata=False, n
 			datarows.append(fields)
 			# template diferent
 			if not newdata:
-				meta = frappe.get_meta(name)
-				i = 1
-				while i <= columns :
-					j = i - 1
-					df = meta.get_field(fields[j])
-			        	if not df:
-						frappe.throw(_("The fields of the file you are trying to load do not correspond to the fields in the initial template file"))
-					i += 1
+                            meta = frappe.get_meta(name)
+                            i = 1
+                            while i <= columns :
+                               j = i - 1
+                               df = meta.get_field(fields[j])
+                               if not df:
+                                   frappe.throw(_("The fields of the file you are trying to load do not correspond to the fields in the initial template file"))
+                               i += 1
 		else:
 			datarows.append(tmp_list)
 	if newdata:
