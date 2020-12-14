@@ -119,7 +119,7 @@ class WebDav(object):
             if not ispath:
                 self.mkdirs(nc_path)
             self.cd(nc_path)
-        if isinstance(local_fileobj, basestring):
+        if isinstance(local_fileobj, str): ##FAD
             with open(local_fileobj, 'rb') as fileobj:
                 self.command('PUT', remote_fileobj, (200, 201, 204), data=fileobj)
         else:

@@ -89,7 +89,7 @@ app_license = "GNU General Public License v3"
 
 doc_events = {
  	"File": {
-  		"before_insert": "pibiapp.nextcloud.nextcloud_link.nextcloud_before_insert",
+  	"before_insert": "pibiapp.nextcloud.nextcloud_link.nextcloud_before_insert",
  		"after_insert": "pibiapp.nextcloud.nextcloud_link.nextcloud_insert",
  		"on_trash": "pibiapp.nextcloud.nextcloud_link.nextcloud_before_delete",
  		"after_delete": "pibiapp.nextcloud.nextcloud_link.nextcloud_delete",

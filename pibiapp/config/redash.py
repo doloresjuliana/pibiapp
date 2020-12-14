@@ -13,14 +13,14 @@ def get_data():
 				}
 			]
 		},
-                {
-                        "label": _("Settings"),
-                        "items": [
-                                {
-                                        "type": "doctype",
-                                        "name": "Redash Dashboards",
-                                        "description": _("List of dashboards and viewing permissions"), 
+    {
+      "label": _("Settings"),
+      "items": [
+        {
+          "type": "doctype",
+          "name": "Redash Dashboards",
+          "description": _("List of dashboards and viewing permissions"), 
 				}
-                        ]
-                }
+      ]
+    }
 ]

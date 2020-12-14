@@ -10,7 +10,7 @@ def get_data():
 			"icon": "octicon octicon-file-directory",
 			"type": "module",
 			"label": _("Nextcloud"),
-			"hidden": 1
+			"hidden": 0
 		},
 		{
 			"module_name": "External Data",
@@ -18,14 +18,14 @@ def get_data():
 			"icon": "octicon octicon-file-binary",
 			"type": "module",
 			"label": _("External Data"),
-			"hidden": 1
+			"hidden": 0
 		},
-                {
-                        "module_name": "Redash",
-                        "color": "grey",
-                        "icon": "octicon octicon-pulse",
-                        "type": "module",
-                        "label": _("Redash"),
-                        "hidden": 1
-                }
+    {
+      "module_name": "Redash",
+      "color": "grey",
+      "icon": "octicon octicon-pulse",
+      "type": "module",
+      "label": _("Redash"),
+      "hidden": 0
+    }
 	]
