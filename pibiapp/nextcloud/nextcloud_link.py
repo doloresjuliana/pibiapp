@@ -3,17 +3,17 @@
 #
 # This file is part of Pibiapp_Nextcloud.
 #
-# Pibiapp_Nextcloud is free software: you can redistribute it and/or 
-# modify it under the terms of the GNU General Public License as 
+# Pibiapp_Nextcloud is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation, version 3 of the License.
 #
-# Pibiapp_Nextcloud is distributed in the hope that it will be useful, 
-# but WITHOUT ANY WARRANTY; without even the implied warranty of 
-# MERCHANTABILITY  or FITNESS FOR A PARTICULAR PURPOSE.  
+# Pibiapp_Nextcloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY  or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License 
-# along with Pibiapp_Nextcloud included in the license.txt file. 
+#
+# You should have received a copy of the GNU General Public License
+# along with Pibiapp_Nextcloud included in the license.txt file.
 # If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
@@ -24,7 +24,7 @@ from frappe.utils.background_jobs import enqueue
 import requests
 from json import dumps
 from frappe.modules.utils import get_doctype_module, get_module_app
-from frappe.desk.tags import DocTags
+from frappe.desk.doctype.tag.tag import DocTags
 from pibiapp.nextcloud import nextcloud_apis
 import json
 import os
@@ -136,13 +136,13 @@ class nextcloud_link():
 	def listtags(self, doc, idfile, relational):
 		doctype = doc.attached_to_doctype
 		module = get_doctype_module(doctype)
-		name = doc.attached_to_name 
+		name = doc.attached_to_name
 		lista = doctype + " # " + module + " # " + name
 		if relational: lista = lista + self.relationaltags(doctype, name, idfile)
 		return lista.split(" # ")
 
 	def shareModule(self, doc):
-		# add group for module 
+		# add group for module
 		data_json = doc.nc.ocs.getGroup(doc.nc.module)
 		data_string = json.dumps(data_json)
 		decoded = json.loads(data_string)
@@ -206,7 +206,7 @@ def nextcloud_insert(doc, method=None):
 	data_string = json.dumps(data_json)
 	decoded = json.loads(data_string)
 	try:
-		fileid = str(decoded["ocs"]["data"]["file_source"]) 
+		fileid = str(decoded["ocs"]["data"]["file_source"])
 	except TypeError:
 		fname = frappe.db.get_value("File", {"file_name": ["like", doc.file_name + " NC/f/%"]}, "name")
 		docorigin = frappe.get_doc('File', str(fname))
@@ -223,7 +223,7 @@ def nextcloud_insert(doc, method=None):
 			frappe.db.commit()
 		sys.exit()
 	if doc.nc.sharepublic or doc.is_private == False:
-		urllink = str(decoded["ocs"]["data"]["url"]) 
+		urllink = str(decoded["ocs"]["data"]["url"])
 	else:
 		urllink = doc.nc.url + "/f/" + fileid
 	# update doctype file
@@ -337,7 +337,7 @@ def nextcloud_backup(doc, method=None):
 	uu = len(fileobj) - 1
 	doc.nc = nc
 	doc.nc.module = "Backups"
-	doc.nc.path = nc.initialpath + "/" + nc.app + "/" + doc.nc.module 
+	doc.nc.path = nc.initialpath + "/" + nc.app + "/" + doc.nc.module
 	doc.nc.pathglobal = doc.nc.path + "/" + fileobj[uu].encode("ascii", "ignore").decode("ascii")
 	doc.nc.local_fileobj = local_fileobj
 	doc.nc.remote_fileobj=fileobj[uu].encode("ascii", "ignore").decode("ascii")
