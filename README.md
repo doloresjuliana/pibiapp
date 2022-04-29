@@ -3,6 +3,9 @@
 
 Pibiapp is an application developed on the Frappe framework to integrate it with other systems and expand the functionality of applications on this framework.
 
+This application is **OBSOLETE** and is not valid for versions of Frappe higher than **11**, but if the part that interests you is the **integration with Nextcloud you will find that functionality improved and expanded in
+https://github.com/pibico/pibiDAV**
+
 #### Current modules
 
 - **Nextcloud**
