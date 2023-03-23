@@ -1,0 +1,46 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"E3tU8dyAIZ\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">NextCloud</span>\",\"col\":12}},{\"id\":\"muchGc-27S\",\"type\":\"card\",\"data\":{\"card_name\":\"NextCloud Settings\",\"col\":4}}]",
+ "creation": "2023-03-23 19:22:05.304766",
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "project-2",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "NextCloud",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "NextCloud Settings",
+   "link_count": 1,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "NextCloud Setting",
+   "link_count": 0,
+   "link_to": "Nextcloud Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2023-03-23 19:26:53.772196",
+ "modified_by": "Administrator",
+ "module": "Nextcloud",
+ "name": "NextCloud",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "Integrations",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 30.0,
+ "shortcuts": [],
+ "title": "NextCloud"
+}
