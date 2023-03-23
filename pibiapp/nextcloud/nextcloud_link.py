@@ -24,7 +24,7 @@ from frappe.utils.background_jobs import enqueue
 import requests
 from json import dumps
 from frappe.modules.utils import get_doctype_module, get_module_app
-from frappe.desk.tags import DocTags
+from frappe.desk.doctype.tag.tag import DocTags
 from pibiapp.nextcloud import nextcloud_apis
 import json
 import os
