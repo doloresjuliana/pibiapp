@@ -66,7 +66,7 @@ class WebDav(object):
         response = self.session.request(method, url, allow_redirects=False, **kwargs)
         if isinstance(expected_code, Number) and response.status_code != expected_code \
             or not isinstance(expected_code, Number) and response.status_code not in expected_code:
-            msg = "Webdav Exception: " + str(response.status_code) + " Method: " + method + " " + path 
+            msg = "Webdav Exception: " + str(response.status_code) + " Method: " + method + " " + url 
             raise WebdavException(msg)
         return response
 
@@ -102,7 +102,7 @@ class WebDav(object):
                 try:
                     self.mkdir(dir, safe=True)
                 except Exception as e:
-                    if e.actual_code == 409:
+                    if e == 409:
                         raise
 
                 finally:
@@ -119,7 +119,7 @@ class WebDav(object):
             if not ispath:
                 self.mkdirs(nc_path)
             self.cd(nc_path)
-        if isinstance(local_fileobj, basestring):
+        if isinstance(local_fileobj, str):
             with open(local_fileobj, 'rb') as fileobj:
                 self.command('PUT', remote_fileobj, (200, 201, 204), data=fileobj)
         else:
