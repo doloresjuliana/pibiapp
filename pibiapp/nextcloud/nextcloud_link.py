@@ -163,7 +163,7 @@ def nextcloud_before_insert(doc, method=None):
 	doc.flags.ignore_file_validate = True
 	# File previously attached to another transaction
 	if not doc.file_name or doc.file_name == None: return
-	if " NC/f/" in doc.file_name: return
+	if " NC_f_" in doc.file_name: return
 	doc.flags.ignore_nc = False
 	site = frappe.local.site
 	if doc.is_private: local_fileobj = "./" + site + doc.file_url
@@ -183,7 +183,7 @@ def nextcloud_insert(doc, method=None):
 	if not "http" in doc.nc.local_fileobj:
 		doc.nc.webdav.upload(local_fileobj=doc.nc.local_fileobj, remote_fileobj=doc.nc.remote_fileobj, nc_path=doc.nc.path)
 	else:
-		data = frappe.db.get_value("File", {"file_url": doc.file_url , "file_name": ["like", "%NC/f/%"]}, ["attached_to_doctype", "name", "file_name"], as_dict=True)
+		data = frappe.db.get_value("File", {"file_url": doc.file_url , "file_name": ["like", "%NC_f_%"]}, ["attached_to_doctype", "name", "file_name"], as_dict=True)
 		if data:
 			if  doc.attached_to_doctype != data.attached_to_doctype:
 				doc.nc.doctype = data.attached_to_doctype
@@ -191,8 +191,8 @@ def nextcloud_insert(doc, method=None):
 				doc.nc.app = get_module_app(doc.nc.module)
 				doc.nc.pathglobal = doc.nc.initialpath + "/" + doc.nc.app + "/" + doc.nc.module + "/" + doc.nc.doctype + "/" + doc.file_name
 				data_json = doc.nc.shareModule(doc)
-			fname = data.file_name.replace(" NC/f/","#")
-			doc.file_name = fname.split("#")[0] + " NC(" + data.name + ")/f/" + fname.split("#")[1]
+			fname = data.file_name.replace(" NC_f_","#")
+			doc.file_name = fname.split("#")[0] + " NC(" + data.name + ")_f_" + fname.split("#")[1]
 			doc.save()
 		return
 	data_json  = doc.nc.shareModule(doc)
@@ -208,14 +208,14 @@ def nextcloud_insert(doc, method=None):
 	try:
 		fileid = str(decoded["ocs"]["data"]["file_source"]) 
 	except TypeError:
-		fname = frappe.db.get_value("File", {"file_name": ["like", doc.file_name + " NC/f/%"]}, "name")
+		fname = frappe.db.get_value("File", {"file_name": ["like", doc.file_name + " NC_f_%"]}, "name")
 		docorigin = frappe.get_doc('File', str(fname))
 		if docorigin:
 			docorigin.content_hash = doc.content_hash
 			docorigin.flags.ignore_file_validate = True
 			docorigin.save()
 			if doc.nc.enabletagging:
-				fileid = str(docorigin.file_name.replace(" NC/f/","#").split("#")[1])
+				fileid = str(docorigin.file_name.replace(" NC_f_","#").split("#")[1])
 				doc.nc.deletetags(docorigin, fileid, relational=doc.nc.relationaltagging)
 				doc.nc.tagging(docorigin, fileid, relational=doc.nc.relationaltagging)
 			os.remove(doc.nc.local_fileobj)
@@ -225,13 +225,13 @@ def nextcloud_insert(doc, method=None):
 	if doc.nc.sharepublic or doc.is_private == False:
 		urllink = str(decoded["ocs"]["data"]["url"]) 
 	else:
-		urllink = doc.nc.url + "/f/" + fileid
+		urllink = doc.nc.url + "_f_" + fileid
 	# update doctype file
 	if urllink != None and urllink != "":
 		doc.file_url = urllink
-		doc.file_name = doc.file_name.encode("ascii", "ignore").decode("ascii") + " NC/f/" + fileid
+		doc.file_name = doc.file_name.encode("ascii", "ignore").decode("ascii") + " NC_f_" + fileid
 		doc.save()
-    	# delete local file
+	# delete local file
 	os.remove(doc.nc.local_fileobj)
 	# tagging
 	if doc.nc.enabletagging:
@@ -248,7 +248,7 @@ def nextcloud_before_delete(doc, method=None):
 	doc.flags.ignore_file_validate = True
 	# File previously attached to another transaction
 	if not doc.file_name or doc.file_name == None: return
-	if not " NC/f/" in doc.file_name: return
+	if not " NC_f_" in doc.file_name: return
 	doc.flags.ignore_nc = False
 	data = frappe.db.get_value("File", {"file_url": doc.file_url , "file_name": ["like", "%NC(%"]}, ["attached_to_doctype", "attached_to_name"], as_dict=True)
 	if data:
@@ -259,7 +259,7 @@ def nextcloud_delete(doc, method=None):
 	if doc.flags.ignore_nc: return
 	nc = nextcloud_link(doc=doc)
 	if not nc.isconnect: return
-	ncf = doc.file_name.find(" NC/f/")
+	ncf = doc.file_name.find(" NC_f_")
 	if ncf == -1: return
 	filename = doc.file_name[0:ncf]
 	path = nc.initialpath + "/" + nc.app + "/" + nc.module + "/" + nc.doctype + "/" + filename
@@ -279,7 +279,7 @@ def nextcloud_downloadtoserver(doc, method=None):
 	if not nc.isconnect: return
 	if not " NC" in doc.file_name: return
 	if " NC(" in doc.file_name:
-		nc.doctype = frappe.db.get_value("File", {"file_url": doc.file_url , "file_name": ["like", "%NC/f/%"]}, "attached_to_doctype")
+		nc.doctype = frappe.db.get_value("File", {"file_url": doc.file_url , "file_name": ["like", "%NC_f_%"]}, "attached_to_doctype")
 		nc.module = get_doctype_module(nc.doctype)
 		nc.app = get_module_app(nc.module)
 	ncf = doc.file_name.find(" NC")
@@ -296,7 +296,7 @@ def get_content(docfile):
 	"""Returns [`file_name`, `content`] for given file name `fname`"""
 	if docfile.get('content'):
 		return docfile.content
-	if " NC" in docfile.file_name and "/f/" in docfile.file_name:
+	if " NC" in docfile.file_name and "_f_" in docfile.file_name:
 		file_path =  nextcloud_downloadtoserver(docfile)
 		ncf = docfile.file_name.find(" NC")
 		filename = docfile.file_name[0:ncf]
