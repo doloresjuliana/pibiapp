@@ -126,7 +126,10 @@ class WebDav(object):
             self.command('PUT', remote_fileobj, (200, 201, 204), data=local_fileobj)
 
     def addtag(self, display_name):
-        url = self.baseurl.replace("webdav","dav") + "/systemtags"
+        if "/dav/files/" in self.baseurl:
+            url = self.baseurl.split("/files/")[0] + "/systemtags"
+        else:
+            url = self.baseurl.replace("webdav","dav") + "/systemtags"
         x = {"name": display_name, "userVisible": "true", "userAssignable": "true"}
         data = json.dumps(x)
         headers = {"Content-Type": "application/json" }
@@ -134,14 +137,20 @@ class WebDav(object):
         return response.status_code
 
     def assingtag(self, idfile, idtag):
-        url = self.baseurl.replace("webdav","dav") + "/systemtags-relations/files/" + str(idfile) + "/" + str(idtag)
+        if "/dav/files/" in self.baseurl:
+            url = self.baseurl.split("/files/")[0] + "/systemtags-relations/files/" + str(idfile) + "/" + str(idtag)
+        else:
+            url = self.baseurl.replace("webdav","dav") + "/systemtags-relations/files/" + str(idfile) + "/" + str(idtag)
         headers = {"Content-Type": "text/xml" }
         response = self.session.put(url, headers=headers)
         return response.status_code
 
     def gettag(self, idtag):
         method='PROPFIND'
-        url = self.baseurl.replace("webdav","dav") + "/systemtags/" + str(idtag)
+        if "/dav/files/" in self.baseurl:
+            url = self.baseurl.split("/files/")[0] + "/systemtags/" + str(idtag)
+        else:
+            url = self.baseurl.replace("webdav","dav") + "/systemtags/" + str(idtag)
         headers = {"Content-Type": "text/xml" }
         fullpath = os.path.realpath(__file__).replace("nextcloud_apis.py","tagpropfind.xml")
         fullpath = fullpath.replace('xmlc','xml')
@@ -159,7 +168,10 @@ class WebDav(object):
 
     def deletetags(self, idfile, nodelete):
         method='PROPFIND'
-        url = self.baseurl.replace("webdav","dav") + "/systemtags-relations/files/" + str(idfile)
+        if "/dav/files/" in self.baseurl:
+            url = self.baseurl.split("/files/")[0] + "/systemtags-relations/files/" + str(idfile)
+        else:
+            url = self.baseurl.replace("webdav","dav") + "/systemtags-relations/files/" + str(idfile)
         headers = {"Content-Type": "text/xml" }
         fullpath = os.path.realpath(__file__).replace("nextcloud_apis.py","tagpropfind.xml")
         fullpath = fullpath.replace('xmlc','xml')
@@ -181,7 +193,10 @@ class WebDav(object):
 
     def deletetag(self, idfile, idtag):
         method='DELETE'
-        url = self.baseurl.replace("webdav","dav") + "/systemtags-relations/files/" + str(idfile) + "/" + str(idtag)
+        if "/dav/files/" in self.baseurl:
+            url = self.baseurl.split("/files/")[0] + "/systemtags-relations/files/" + str(idfile) + "/" + str(idtag)
+        else:
+            url = self.baseurl.replace("webdav","dav") + "/systemtags-relations/files/" + str(idfile) + "/" + str(idtag)
         headers = {"Content-Type": "text/xml" }
         response = self.session.request(method, url, headers=headers)
         return response.status_code
