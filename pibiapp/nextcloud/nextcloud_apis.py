@@ -36,9 +36,13 @@ class WebDav(object):
           if len(vurl) == 3:
             port = vurl[2]
 
+        # If the NextCloud version requires a port, it must be specified in the parameter Script URL
+        # https://mynextcloud.com:443 if protocol == 'https' else 80
         if not port:
-            port = 443 if protocol == 'https' else 80
-        self.baseurl = '{0}://{1}:{2}'.format(protocol, host, port)
+            self.baseurl = '{0}://{1}'.format(protocol, host)
+        else:
+            self.baseurl = '{0}://{1}:{2}'.format(protocol, host, port)
+	
         if path:
             self.baseurl = '{0}/{1}'.format(self.baseurl, path)
         self.cwd = '/'
