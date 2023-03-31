@@ -94,7 +94,7 @@ class nextcloud_link():
 
 	def actualizetags(self, spaces=1, search_name=""):
 		docns = frappe.get_doc("Nextcloud Settings")
-		if docns.last_id_tag is None or search_name != "": spaces = 50
+		if docns.last_id_tag is None or search_name != "": spaces = 250
 		j = v = int(0)
 		i = lastid = int(0 if docns.last_id_tag is None else docns.last_id_tag)
 		while True:
